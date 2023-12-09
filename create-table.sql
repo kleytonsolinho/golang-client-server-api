@@ -1,0 +1,1 @@
+create table currency_price (id varchar(255), code varchar(255), price decimal(10,4), primary key(id));

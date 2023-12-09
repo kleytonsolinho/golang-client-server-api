@@ -18,5 +18,11 @@ type CurrencyPairs struct {
 	Usdbrl Usdbrl `json:"USDBRL"`
 }
 
+type CurrencyPrice struct {
+	ID    string
+	Code  string
+	Price string
+}
+
 const CurrencyPriceRoute = "/cotacao"
 const AwesomeAPI = "https://economia.awesomeapi.com.br/json/last/USD-BRL"
