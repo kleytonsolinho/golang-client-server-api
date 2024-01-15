@@ -9,7 +9,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/kleytonsolinho/golang-client-server-api/dto"
+	"github.com/kleytonsolinho/golang-client-server-api/internal/dto"
 )
 
 func main() {

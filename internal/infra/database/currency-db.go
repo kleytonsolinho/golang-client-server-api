@@ -4,12 +4,11 @@ import (
 	"context"
 
 	"github.com/kleytonsolinho/golang-client-server-api/internal/entity"
-	"github.com/kleytonsolinho/golang-client-server-api/internal/infra/database"
 	"gorm.io/gorm"
 )
 
 type CurrencyRepository struct {
-	DB database.CurrencyInterface
+	DB *gorm.DB
 }
 
 func NewCurrencyDb(db *gorm.DB) *CurrencyRepository {

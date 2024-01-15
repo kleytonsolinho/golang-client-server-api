@@ -20,14 +20,15 @@ func GetCurrencyPriceHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
-
-	ctx := r.Context()
+	log.Println("--------------------")
 	log.Println("Request iniciada")
 	defer log.Println("Request finalizada")
 
+	ctx := r.Context()
+
 	select {
 	case <-time.After(210 * time.Millisecond):
-		log.Println("Request processada com sucesso")
+		log.Println("210 milisegundos atingido")
 	case <-ctx.Done():
 		log.Println("Request cancelada pelo cliente")
 	}
@@ -39,7 +40,6 @@ func GetCurrencyPriceHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	currencyPriceRepository(currency)
-	log.Println("Dados salvos no banco de dados com sucesso")
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -52,13 +52,13 @@ func getCurrency() (*dto.CurrencyPairs, error) {
 
 	req, err := http.NewRequestWithContext(ctx, "GET", "https://economia.awesomeapi.com.br/json/last/USD-BRL", nil)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		log.Println("Error de timeout ao fazer a requisição")
-		panic(err)
+		return nil, err
 	}
 	defer res.Body.Close()
 
@@ -72,6 +72,8 @@ func getCurrency() (*dto.CurrencyPairs, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	log.Println("Request processada com sucesso")
 
 	return &result, nil
 }
@@ -97,4 +99,6 @@ func currencyPriceRepository(currency *dto.CurrencyPairs) {
 	if err != nil {
 		panic(err)
 	}
+
+	log.Println("Dados salvos no banco de dados com sucesso")
 }
