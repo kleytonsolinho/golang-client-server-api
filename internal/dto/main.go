@@ -17,9 +17,3 @@ type Usdbrl struct {
 type CurrencyPairs struct {
 	Usdbrl Usdbrl `json:"USDBRL"`
 }
-
-type CurrencyPrice struct {
-	ID    string
-	Code  string
-	Price string
-}

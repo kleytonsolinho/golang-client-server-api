@@ -9,7 +9,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/kleytonsolinho/golang-client-server-api/shared"
+	"github.com/kleytonsolinho/golang-client-server-api/dto"
 )
 
 func main() {
@@ -32,7 +32,7 @@ func main() {
 		panic(err)
 	}
 
-	var data shared.CurrencyPairs
+	var data dto.CurrencyPairs
 	err = json.Unmarshal(currency, &data)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error ao fazer parse da resposta: %v\n", err)
