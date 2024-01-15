@@ -1,4 +1,4 @@
-package shared
+package dto
 
 type Usdbrl struct {
 	Code       string `json:"-"`
@@ -23,6 +23,3 @@ type CurrencyPrice struct {
 	Code  string
 	Price string
 }
-
-const CurrencyPriceRoute = "/cotacao"
-const AwesomeAPI = "https://economia.awesomeapi.com.br/json/last/USD-BRL"

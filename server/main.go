@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"io/ioutil"
 	"log"
@@ -12,17 +11,19 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/google/uuid"
 
-	"github.com/kleytonsolinho/golang-client-server-api/shared"
+	"github.com/kleytonsolinho/golang-client-server-api/dto"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 func main() {
 	mux := http.NewServeMux()
-	mux.HandleFunc(shared.CurrencyPriceRoute, getCurrencyPriceHandler)
+	mux.HandleFunc("/cotacao", getCurrencyPriceHandler)
 	http.ListenAndServe(":8080", mux)
 }
 
 func getCurrencyPriceHandler(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != shared.CurrencyPriceRoute {
+	if r.URL.Path != "/cotacao" {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -52,11 +53,11 @@ func getCurrencyPriceHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(currency)
 }
 
-func getCurrency() (*shared.CurrencyPairs, error) {
+func getCurrency() (*dto.CurrencyPairs, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
 	defer cancel()
 
-	req, err := http.NewRequestWithContext(ctx, "GET", shared.AwesomeAPI, nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", "https://economia.awesomeapi.com.br/json/last/USD-BRL", nil)
 	if err != nil {
 		panic(err)
 	}
@@ -73,7 +74,7 @@ func getCurrency() (*shared.CurrencyPairs, error) {
 		return nil, err
 	}
 
-	var result shared.CurrencyPairs
+	var result dto.CurrencyPairs
 	err = json.Unmarshal(body, &result)
 	if err != nil {
 		return nil, err
@@ -82,24 +83,36 @@ func getCurrency() (*shared.CurrencyPairs, error) {
 	return &result, nil
 }
 
-func currencyPriceRepository(currency *shared.CurrencyPairs) {
-	db, err := sql.Open("mysql", "root:root@tcp(127.0.0.1:3306)/currency-db")
+func currencyPriceRepository(currency *dto.CurrencyPairs) {
+	db, err := gorm.Open(sqlite.Open("file::memory:"), &gorm.Config{})
 	if err != nil {
 		panic(err)
 	}
-	defer db.Close()
+	db.AutoMigrate(&dto.CurrencyPrice{})
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
 	defer cancel()
 
 	currencyPrice := NewCurrencyPrice(currency.Usdbrl.Bid)
-	err = insertCurrencyPrice(ctx, db, currencyPrice)
+	currencyDB := NewCurrency(db)
+
+	err = insertCurrencyPrice(ctx, currencyDB, currencyPrice)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func insertCurrencyPrice(ctx context.Context, db *sql.DB, currencyPrice *shared.CurrencyPrice) error {
+type Currency struct {
+	DB *gorm.DB
+}
+
+func NewCurrency(db *gorm.DB) *Currency {
+	return &Currency{
+		DB: db,
+	}
+}
+
+func insertCurrencyPrice(ctx context.Context, db *gorm.DB, currencyPrice *dto.CurrencyPrice) error {
 	stmt, err := db.Prepare("insert into currency_price(id, code, price) values(?, ?, ?)")
 	if err != nil {
 		return err
@@ -113,8 +126,8 @@ func insertCurrencyPrice(ctx context.Context, db *sql.DB, currencyPrice *shared.
 	return nil
 }
 
-func NewCurrencyPrice(price string) *shared.CurrencyPrice {
-	return &shared.CurrencyPrice{
+func NewCurrencyPrice(price string) *dto.CurrencyPrice {
+	return &dto.CurrencyPrice{
 		ID:    uuid.New().String(),
 		Code:  "USDBRL",
 		Price: price,
